@@ -160,7 +160,7 @@ void * maxint(void *arg) {
                 uint16_t n = cli_max.nb;
                 n =htons(n);
                 memmove(mess+strlen(rep)+MAX_NAME+sizeof(uint32_t), &n, sizeof(uint16_t));
-                int nb_sent = send (fd, mess, strlen(rep),0);
+                int nb_sent = send (fd, mess, 512,0);
                 if (nb_sent==-1) {
                     perror("send");
                     exit(1);

@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     address_sock.sin_port = htons(port);
+    //todo: addresse !!!!
     address_sock.sin_addr.s_addr = htonl(INADDR_ANY);
 
     int r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
 
             char * pseudo = (char *) malloc(MAX_NAME);
             int size = sprintf(pseudo, "pseudo%d",i+1);
-            if (size != MAX_NAME) {
+            if (size > MAX_NAME) {
                 perror("pseudo size incorrect");
                 exit(1);
             }
@@ -79,6 +80,11 @@ int main(int argc, char *argv[]) {
                         uint16_t rd = rand() % 100;
                         rd = htons(rd);
                         memmove(mess+strlen(debut),&rd,sizeof(uint16_t));
+                        int nb_sent = send (fd, mess, 100,0);
+                        if (nb_sent==-1) {
+                            perror("send");
+                            exit(1);
+                        }
                         free(mess);
                     }
                 }
