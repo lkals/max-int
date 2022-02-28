@@ -10,24 +10,12 @@
 #include <pthread.h>
 #define MAX_NAME 10
 
-/*
-Le protocole maxint côté serveur
-Après avoir salué le client avec le message « HELLO␣<pseudo> », le serveur répond aux requêtes
-du client de la façon suivante :
-– s’il reçoit un message de type « INT ». Il renvoie le message « INTOK » (Message OK) au client pour dire qu’il a reçu son message,
-– s’il reçoit un message de type « MAX », il envoie au client la valeur maximale de l’entier parmi les entiers reçus. Il envoie donc « REP<pseudo><ip><val> » où <pseudo> est le nom de l’utilisateur ayant envoyé le plus grand entier, <ip> est son adresse ip codée sur 4 octets en big-endian, et <val> est la valeur du plus grand entier reçu par le serveur codé en big-endian. Il n’y a pas d’espace entre le pseudo, l’adresse ip et les données. Si le serveur n’a pas encore reçu d’entier, il répond par « NOP ». Si plusieurs clients ont envoyé la valeur la plus grande, le serveur renverra l’identité du dernier client ayant envoyé cette valeur.
-Attention, veillez à bien gérer les accès concurrents pour les valeurs sauvegardées par le serveur.
-Notes : le champ sin_addr.s_addr de la structure struct sockaddr_in est un entier codé sur 4 octets en écriture big-endian.
-Pour afficher un entier sous forme hexadécimal avec la fonction printf, utilisez la spécification de format %x.
-*/
 
 typedef struct {
-    int * fd;
+    int fd;
     struct sockaddr_in * addr;
-    //char * pseudo;
-    // ajout d'informations utiles et pour compater le code
-    char pseudo[10];
-    uint16_t nb;
+    char * pseudo;
+    int nb;
 } cli_info;
 
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -39,32 +27,34 @@ int reception;
 
 // TODO: tester sur lulu et sur d'autres ordis
 // TODO: faire un goto error si temps
-
+// todo: define constante buffer
 //todo: utiliser les fonctions mem (memmove plutot que mempcpy) pour envoyer des suites d'octets (envoyer des int en big endian et non pas des string
 
 void * maxint(void *arg);
 
 int main(int argc, char *argv[]) {
-
-    //todo: vérifier qu'un numéro de port est en argument
-    if (argc!=2) {
-        fprintf(stderr,"nombre d'arguments : ajouter numéro de port aux arguments du programme \n");
-        exit(1);
-    }
-    //todo: traiter argv[1]
-
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    cli_max.nb= 0;
+    cli_info *cli;
+    int port;
+     switch (argc)
+        {
+        case 1:
+            port = 4242;
+            break;
+        case 2:
+            port= atoi(argv[1]);
+            break;
+        default:
+            printf("Usage : ./serveur [port].\nPort par défaut : 4242.\n");
+            exit(1);
+        }
+    int sockfd = socket(PF_INET, SOCK_STREAM, 0);
     if (sockfd==-1) {
         perror("socket");
         exit(1);
     }
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
-    int port = atoi(argv[1]);
-    if (port == 0) {
-        perror("atoi");
-        exit(1);
-    }
     address_sock.sin_port = htons(port);
     address_sock.sin_addr.s_addr=htonl(INADDR_ANY);
 
@@ -75,20 +65,28 @@ int main(int argc, char *argv[]) {
     }
     if (r==0) {
         r = listen(sockfd,0);
-        if (r==0) {
-            struct sockaddr_in caller;
-            socklen_t size = sizeof(caller);
-            int * sockcli = (int *)malloc(sizeof(int));
-            cli_info * cli = malloc (sizeof(cli_info));
+        //if (r==0) {
+
             while (1) {
-                *sockcli= accept(sockfd, (struct sockaddr *)&caller, &size);
-                cli->fd = sockcli;
+                struct sockaddr_in caller;
+                socklen_t size = sizeof(caller);
+                int * sockcli = (int *)malloc(sizeof(int));
+                cli = malloc (sizeof(cli_info));
+                *sockcli = accept(sockfd, (struct sockaddr *)&caller, &size);
+                cli->fd = *sockcli;
                 cli->addr = &caller;
-                pthread_t th;
-                pthread_create (&th, NULL, maxint,cli);
+                cli->nb = 0;
+                cli->pseudo = NULL;
+                if (cli>=0 && sockcli>0) {
+                    pthread_t th;
+                    pthread_create (&th, NULL, maxint,cli);
+                }
             }
-        }
+       // }
         // todo: faire les free et close nécessaires
+    } else {
+        perror("Can't start server");
+        return 1;
     }
     return 0;
 }
@@ -96,39 +94,53 @@ int main(int argc, char *argv[]) {
 void * maxint(void *arg) {
 
     cli_info * cli = ((cli_info *)arg);
-    int fd = *(cli->fd);
+    cli->pseudo =malloc (MAX_NAME+1);
+    int fd = (cli->fd);
 
     // on attend le message du client <pseudo>
-    int recu = recv(fd, cli->pseudo, 10*sizeof(char),0);
+    int recu = recv(fd, cli->pseudo, MAX_NAME,0);
+    if (recu==-1) {
+        perror("recv");
+        exit(1);
+    }
     if (recu==0) {
         close(fd);
+        return NULL;
     }
+    printf("%s\n",cli->pseudo);
+
+    char *buffer = malloc(100*sizeof(char));
+    if (recu >0) {
     //todo: attention au charactère final
-    cli->pseudo[recu]='\0';
+        cli->pseudo[recu]='\0';
 
-    char * mess = malloc(100);
-    char * hello ="HELLO";
-    memmove(mess,hello,strlen(hello));
-    memmove(mess+strlen(hello),cli->pseudo, MAX_NAME);
-    int nb_send = send(fd,mess,strlen(mess)+1,0);
-    free(mess);
+        sprintf(buffer, "HELLO %s", cli->pseudo);
 
-    if (nb_send != -1) {
-        pthread_mutex_lock(&lock);
+        send(fd,buffer,strlen(buffer),0);
+        //todo: verifier diff -1
+        memset(buffer,0,100);
+    } else {
+        printf(":((");
+    }
 
-        char * buff=malloc(100);
-        int recu = recv(fd, buff, 99*sizeof(char),0);
+    int run = 1;
+
+    while (run) {
+        memset(buffer,0,100);
+        recu = recv(fd, buffer, 99*sizeof(char),0);
         if (recu==0) {
-            close(fd);
+            run=0;
         }
-
         char * tmp = malloc(100);
-        memmove(tmp, buff, 3);
+        memmove(tmp,buffer,3);
         uint16_t nb;
+        printf("%s",buffer);
         if (strcmp(tmp, "INT")==0) {
-            memmove (&nb, buff+3, 2);
+            pthread_mutex_lock(&lock);
+            memmove (&nb, buffer+3, 2);
             //todo: voir si marche ntohs
             nb = ntohs(nb);
+            printf("%d\n",nb);
             if (nb > cli_max.nb) {
                 cli_max.nb = nb;
             }
@@ -138,9 +150,13 @@ void * maxint(void *arg) {
                 perror("send");
                 exit(1);
             }
+            memset(tmp,0,100);
+            memset(buffer,0,100);
+            pthread_mutex_unlock(&lock);
         }
-        free(tmp);
-        if (strcmp("MAX",buff)==0) {
+        printf("apres int\n");
+        if (strcmp("MAX",buffer)==0) {
+            pthread_mutex_lock(&lock);
             /*
             envoie au client la valeur maximale de
             l’entier parmi les entiers reçus.
@@ -168,19 +184,27 @@ void * maxint(void *arg) {
                 free(mess);
                 reception=1;
             } else {
-                char * rep = "NOP";
-                int nb_sent = send (fd, rep, strlen(rep)+1,0);
+                int nb_sent = send (fd, "NOP", 3,0);
                 if (nb_sent==-1) {
                     perror("send");
                     exit(1);
                 }
             }
+            pthread_mutex_unlock(&lock);
         }
-        free(buff);
-        pthread_mutex_unlock(&lock);
+        else
+                    {
+                        printf("else\n");
+                        sprintf(buffer, "UNKNOWN COMMAND: %s", buffer);
+                        send(fd, buffer, strlen(buffer),0);
+                        memset(buffer,0,100);
+                        run = 0;
+                    }
     }
+    free(buffer);
     // déconnexion du client
     close(fd);
+    free(cli);
     return NULL;
 }
 

@@ -15,10 +15,19 @@
 
 int main(int argc, char *argv[]) {
 
-    if (argc != 2) {
-        fprintf(stderr, "nombre d'arguments : ajouter numéro de port aux arguments du programme \n");
-        exit(1);
-    }
+   int port;
+        switch (argc)
+           {
+           case 1:
+               port = 4242;
+               break;
+           case 2:
+               port= atoi(argv[1]);
+               break;
+           default:
+               printf("Usage : ./serveur [port].\nPort par défaut : 4242.\n");
+               exit(1);
+           }
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd==-1) {
@@ -27,14 +36,10 @@ int main(int argc, char *argv[]) {
     }
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
-    int port = atoi(argv[1]);
-    if (port == 0) {
-        perror("atoi");
-        exit(1);
-    }
+
     address_sock.sin_port = htons(port);
-    // todo: addresse
-    address_sock.sin_addr.s_addr = htonl(INADDR_ANY);
+    // todo: addresse : lulu ou host ?
+    inet_aton("127.0.0.1",&address_sock.sin_addr);
     int r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
     if (r==-1) {
         perror("connect");
