@@ -165,17 +165,22 @@ void * maxint(void *arg) {
                 char * mess = malloc(512);
                 char * rep = "REP";
                 //TODO: pb: faire un compteur mais quel type ? on a du 32 et du 16 bits
-                uint32_t ctr;
+                int ctr=0;
 
                 memmove(mess,rep,strlen(rep));
+                ctr += strlen(rep);
                 // todo: ajouter caractère final a pseudo_max ???
-                memmove(mess+strlen(rep),cli_max.pseudo,MAX_NAME);
+                memmove(mess+ctr,cli_max.pseudo,MAX_NAME);
+                ctr += MAX_NAME;
                 uint32_t ip = cli_max.addr->sin_addr.s_addr;
                 ip = htonl(ip);
+
                 memmove(mess+strlen(rep)+MAX_NAME,&ip,sizeof(uint32_t));
+                ctr += sizeof(uint32_t);
                 uint16_t n = cli_max.nb;
                 n =htons(n);
                 memmove(mess+strlen(rep)+MAX_NAME+sizeof(uint32_t), &n, sizeof(uint16_t));
+                ctr += sizeof(uint16_t);
                 int nb_sent = send (fd, mess, 512,0);
                 if (nb_sent==-1) {
                     perror("send");
