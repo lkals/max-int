@@ -154,7 +154,7 @@ void * maxint(void *arg) {
             memset(buffer,0,100);
             pthread_mutex_unlock(&lock);
         }
-        printf("apres int\n");
+
         if (strcmp("MAX",buffer)==0) {
             pthread_mutex_lock(&lock);
             /*
@@ -194,7 +194,7 @@ void * maxint(void *arg) {
         }
         else
                     {
-                        printf("else\n");
+
                         sprintf(buffer, "UNKNOWN COMMAND: %s", buffer);
                         send(fd, buffer, strlen(buffer),0);
                         memset(buffer,0,100);

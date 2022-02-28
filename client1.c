@@ -49,8 +49,14 @@ int main(int argc, char *argv[]) {
         int i = 0;
         char * pseudo = (char *) malloc(MAX_NAME+1);
         while (i<5) {
-            printf("i :%d\n",i);
+            fd = socket(PF_INET, SOCK_STREAM,0);
+            r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
+            if (r==-1) {
+                perror("connect");
+                exit(1);
+            }
 
+            printf("i :%d\n",i);
             int size = sprintf(pseudo, "pseudo%d",i+1);
             if (size > MAX_NAME) {
                 perror("pseudo size incorrect");
@@ -109,7 +115,7 @@ int main(int argc, char *argv[]) {
             }
             memset(buffer,0,100);
             memset(pseudo,0,MAX_NAME+1);
-            printf("incr\n");
+
             i++;
             close(fd);
         }
