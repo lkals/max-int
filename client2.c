@@ -40,7 +40,9 @@ int main(int argc, char *argv[]) {
 
     address_sock.sin_port = htons(port);
     // todo: addresse : lulu ou host ?
-    inet_aton("127.0.0.1",&address_sock.sin_addr);
+    //inet_aton("192.168.70.237",&address_sock.sin_addr);
+     inet_aton("127.0.0.1",&address_sock.sin_addr);
+
     int r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
     if (r==-1) {
         perror("connect");

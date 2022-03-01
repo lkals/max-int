@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
            case 2:
                port= atoi(argv[1]);
                break;
+
            default:
                printf("Usage : ./serveur [port].\nPort par défaut : 4242.\n");
                exit(1);
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
     address_sock.sin_family = AF_INET;
     address_sock.sin_port = htons(port);
     //todo: addresse !!!!
+   // inet_aton("192.168.70.237",&address_sock.sin_addr);
     inet_aton("127.0.0.1",&address_sock.sin_addr);
 
     int r; //= connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));

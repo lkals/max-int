@@ -244,10 +244,11 @@ void * maxint(void *arg) {
         }
         else
                     {
-
-                        sprintf(buffer, "UNKNOWN COMMAND: %s", buffer);
-                        //send(fd, buffer, strlen(buffer),0);
-                        memset(buffer,0,BUFF_SIZE);
+                        memset(buffer, 0, BUFF_SIZE);
+                        sprintf(buffer, "UNKNOWN COMMAND");
+                        //todo: préciser quelle commande est mauvaise
+                        //sprintf(buffer, "UNKNOWN COMMAND: %s", buffer);
+                        send(fd, buffer, strlen(buffer),0);
                         run = 0;
                     }
                     }
