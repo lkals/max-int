@@ -9,6 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #define MAX_NAME 10
+#define BUFF_SIZE 256
 
 //todo: faire un fichier utils avec fonction attente reponse serveur par exemple ??
 
@@ -45,18 +46,24 @@ int main(int argc, char *argv[]) {
         perror("connect");
         exit(1);
     }
-    char *pseudo = (char *) malloc(MAX_NAME+1);
+    char * pseudo = (char *) malloc(MAX_NAME+1);
+    char * buffer = (char *) malloc(BUFF_SIZE);
+    char * pseudo_max = (char *)malloc(MAX_NAME+1);
+
+
+    int nb_sent;
+    int recu;
+    int size;
     if (r==0) {
 
-        int size = sprintf(pseudo,"client2");
-        int nb_sent = send(fd, pseudo, size,0);
+        size = sprintf(pseudo,"client2");
+        nb_sent = send(fd, pseudo, size,0);
         if (nb_sent==-1) {
             perror("send");
             exit(1);
         }
         // Il attend ensuite la réponse du serveur de la forme « HELLO␣<pseudo> »
-        char * buffer = (char *) malloc(256);
-        int recu = recv(fd, buffer, 255,0);
+        recu = recv(fd, buffer, (BUFF_SIZE-1),0);
 
         if (recu == -1) {
             perror("recv");
@@ -67,31 +74,30 @@ int main(int argc, char *argv[]) {
             sleep(1000);
         }
         if (recu > 0) {
+
             // verifie qu'on a reçu la réponse de format « HELLO␣<pseudo> »
-            printf("%s\n",buffer);
+
             char model[20];
-            int size = sprintf(model, "HELLO %s",pseudo);
-            if (size == recu) {
-                if (strcmp(model,buffer)==0) {
-
-
+            size = sprintf(model, "HELLO %s",pseudo);
+            if (strcmp(model,buffer)==0) {
+                buffer[recu]='\0';
+                printf("%s\n",buffer);
 
             char * max = "MAX";
-            int nb_sent = send (fd, max,strlen(max),0);
+            nb_sent = send (fd, max,strlen(max),0);
             if (nb_sent == -1) {
                 perror("send");
                 exit(1);
             }
-            memset(buffer,0,256);
+            memset(buffer,0,BUFF_SIZE);
             int curr_size=0;
-            int recu = recv(fd, buffer, 255,0);
+            recu = recv(fd, buffer, (BUFF_SIZE-1),0);
             if (recu == 0) {
                 //todo: idk
                 sleep(1000);
             }
             buffer[recu]='\0';
             printf("%s\n",buffer);
-            char * pseudo_max = (char *)malloc(MAX_NAME+1);
             curr_size += 3;
             memmove(pseudo_max,buffer+curr_size, MAX_NAME);
             curr_size+= MAX_NAME;
@@ -120,18 +126,15 @@ int main(int argc, char *argv[]) {
                 perror("write");
                 exit(1);
             }
-            free(pseudo_max);
               } else {
                 printf("è.é\n");
               }
-            } else {
-                printf("fuck\n");
-            }
-
         }
-                    free(buffer);
+
     }
+    free(pseudo_max);
+    free(buffer);
     free(pseudo);
-
-
+    close(fd);
+    return 0;
 }

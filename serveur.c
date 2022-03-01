@@ -174,6 +174,7 @@ cli->pseudo[recu]='\0';
         }
 
         else if (strcmp("MAX",buffer)==0) {
+            printf("\n");
             pthread_mutex_lock(&lock);
             /*
             envoie au client la valeur maximale de
