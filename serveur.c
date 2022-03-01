@@ -224,6 +224,7 @@ void * maxint(void *arg) {
                 buff_size_ctr += sizeof(uint32_t);
                 uint16_t n = cli->max_item->nb;
                 n =htons(n);
+
                 memmove(buffer+buff_size_ctr, &n, sizeof(uint16_t));
                 buff_size_ctr += sizeof(uint16_t);
                 int nb_sent = send (fd, buffer, buff_size_ctr,0);

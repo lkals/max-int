@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
                         printf("%s\n",buffer);
                         char * debut = "INT";
                         memmove(tmp, debut, strlen(debut));
-                        uint16_t rd = rand() % 1000;
+                        uint16_t rd = rand() % 100;
                         rd = htons(rd);
                         memmove(tmp+strlen(debut),&rd,sizeof(uint16_t));
                         //todo: envoyer pile ce qu'il faut envoyer ou pas ?

@@ -46,9 +46,9 @@ int main(int argc, char *argv[]) {
         perror("connect");
         exit(1);
     }
-    char * pseudo = (char *) malloc(MAX_NAME+1);
-    char * buffer = (char *) malloc(BUFF_SIZE);
-    char * pseudo_max = (char *)malloc(MAX_NAME+1);
+    char * pseudo = calloc(MAX_NAME+1,sizeof(char));
+    char * buffer = calloc(BUFF_SIZE,sizeof(char));
+    char * pseudo_max = calloc(MAX_NAME+1,sizeof(char));
 
 
     int nb_sent;
@@ -96,8 +96,7 @@ int main(int argc, char *argv[]) {
                 //todo: idk
                 sleep(1000);
             }
-            buffer[recu]='\0';
-            printf("%s\n",buffer);
+
             if (strcmp(buffer,"NOP")!=0) {
             curr_size += 3;
             memmove(pseudo_max,buffer+curr_size, MAX_NAME);
@@ -112,23 +111,35 @@ int main(int argc, char *argv[]) {
             memmove(&nb, buffer+curr_size,sizeof(uint16_t));
             nb = ntohs(nb);
             // écriture dans sortie standard
-            printf("ecriture:\n");
+
             pseudo_max[MAX_NAME]='\0';
-            int nb_written = write (1,pseudo_max,MAX_NAME);
+            printf("pseudo:%s\n",pseudo_max);
+            // affichage de l'adresse ip:
+            struct in_addr addr;
+            addr.s_addr=ip;
+            char * ipv4 = inet_ntoa(addr);
+            printf("ip:%s\n",ipv4);
+            printf("nb:%d\n",nb);
+            /*int nb_written = write (1,pseudo_max,MAX_NAME);
             if (nb_written==-1) {
                 perror("write");
                 exit(1);
             }
+            printf("\nip:\n");
             nb_written = write(1, &ip, sizeof(uint32_t));
             if (nb_written==-1) {
                 perror("write");
                 exit(1);
             }
+            printf("\nnb:\n");
             nb_written = write(1, &nb, sizeof(uint16_t));
             if (nb_written==-1) {
                 perror("write");
                 exit(1);
-            }
+            }*/
+        } else {
+            buffer[recu]='\0';
+            printf("%s\n",buffer);
         }
         }
     }
