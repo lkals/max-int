@@ -9,6 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #define MAX_NAME 10
+#define BUFF_SIZE 256
 
 
 int main(int argc, char *argv[]) {
@@ -48,7 +49,15 @@ int main(int argc, char *argv[]) {
         srand(time(NULL));
         int i = 0;
         char * pseudo = (char *) malloc(MAX_NAME+1);
+        char * buffer = (char *) malloc(BUFF_SIZE*sizeof(char));
+        char * tmp =(char *) malloc(BUFF_SIZE*sizeof(char));
+        int nb_sent;
+        int recu;
+        int size;
         while (i<5) {
+            memset(pseudo,0,MAX_NAME+1);
+            memset(buffer,0,BUFF_SIZE);
+            memset(tmp,0,BUFF_SIZE);
             fd = socket(PF_INET, SOCK_STREAM,0);
             r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
             if (r==-1) {
@@ -56,13 +65,13 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
 
-            printf("i :%d\n",i);
-            int size = sprintf(pseudo, "pseudo%d",i+1);
+            //printf("i:%d\n",i);
+            size = sprintf(pseudo, "pseudo%d",i+1);
             if (size > MAX_NAME) {
                 perror("pseudo size incorrect");
                 exit(1);
             }
-            int nb_sent = send(fd, pseudo, size, 0);
+            nb_sent = send(fd, pseudo, size, 0);
             //printf("send %s",pseudo);
             if (nb_sent == -1) {
                 perror("send");
@@ -70,55 +79,81 @@ int main(int argc, char *argv[]) {
             }
 
             // Il attend ensuite la réponse du serveur de la forme « HELLO␣<pseudo> »
-            char * buffer = (char *) malloc(100);
-            char * tmp =(char *) malloc(100);;
-            int recu = recv(fd, buffer, 99,0);
+             recu = recv(fd, buffer, (BUFF_SIZE-1),0);
              if (recu == 0) {
                             //todo: idk
+                            printf("wait...\n");
                             sleep(1000);
                         }
             if (recu == -1) {
+                fprintf( stderr, "ERR:hello pseudo err \n");
                 perror("recv");
                 exit(1);
             }
 
             // todo: verifier directement si recu == size(HELLO pseudo) ??
-            if (recu > 0) {
-                printf("%s\n",buffer);
-                char model[20];
-                int size = sprintf(model, "HELLO %s",pseudo);
-                if (size == recu) {
+            //if (recu > 0) {
+
+                char model[50];
+                size = sprintf(model, "HELLO %s",pseudo);
+                //if (size == recu) {
                     if (strcmp(model,buffer)==0) {
-                        memset(tmp,0,100);
+                        buffer[recu]='\0';
+                        printf("%s\n",buffer);
                         char * debut = "INT";
                         memmove(tmp, debut, strlen(debut));
                         uint16_t rd = rand() % 100;
                         rd = htons(rd);
                         memmove(tmp+strlen(debut),&rd,sizeof(uint16_t));
-                        int nb_sent = send (fd, tmp, 100,0);
+                        //todo: envoyer pile ce qu'il faut envoyer ou pas ?
+                        nb_sent = send (fd, tmp, strlen(debut)+sizeof(uint16_t),0);
                         //printf("%s\n",mess);
                         if (nb_sent==-1) {
                             perror("send");
                             exit(1);
                         }
-                        memset(tmp,0,100);
-                    }
-                }
-            }
-            memset(buffer,0,100);
-            recu = recv(fd, buffer,99,0);
-            if (recu == 0) {
-                sleep(1000);
-            }
-            if (recu >0) {
-                printf("%s\n",buffer);
-            }
-            memset(buffer,0,100);
-            memset(pseudo,0,MAX_NAME+1);
+                        //memset(tmp,0,BUFF_SIZE);
 
-            i++;
-            close(fd);
+                        // suite du protocole : on doit recevoir INTOK
+                        //memset(buffer,0,BUFF_SIZE);
+                        //if (nb_sent>0) {
+                        memset(buffer,0,BUFF_SIZE);
+                                    recu = recv(fd, buffer,(BUFF_SIZE-1),0);
+                                    if (recu==-1) {
+                                        fprintf( stderr, "ERR:recv intok erreur \n");
+                                        perror("recv");
+                                        exit(1);
+                                    }
+                                    if (recu == 0) {
+                                     printf("wait...\n");
+                                        sleep(1000);
+                                    }
+
+                                    if (recu > 0) {
+                                        //printf("recu:%d\n",recu);
+                                        buffer[recu]='\0';
+                                        printf("%s\n",buffer);
+                                    }
+                                    /*memset(tmp,0,BUFF_SIZE);
+                                    memset(buffer,0,BUFF_SIZE);
+                                    memset(pseudo,0,MAX_NAME+1);*/
+                                    //i++;
+                                    //close(fd);
+
+                   // }
+                    } /*else {
+                        sleep(1000);
+                    }*/
+                //}
+
+                i++;
+                close(fd);
+            //}
+
         }
+        free(tmp);
+        free(buffer);
+        free(pseudo);
     }
     close(fd);
     return 0;

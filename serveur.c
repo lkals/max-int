@@ -9,6 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #define MAX_NAME 10
+#define BUFF_SIZE 256
 
 
 typedef struct {
@@ -107,18 +108,19 @@ void * maxint(void *arg) {
         close(fd);
         return NULL;
     }
-    printf("%s\n",cli->pseudo);
 
-    char *buffer = malloc(100*sizeof(char));
+
+    char *buffer = malloc(BUFF_SIZE*sizeof(char));
+    char * tmp = malloc(BUFF_SIZE*sizeof(char));
     if (recu >0) {
     //todo: attention au charactère final
-        cli->pseudo[recu]='\0';
+cli->pseudo[recu]='\0';
+        printf("%s\n",cli->pseudo);
+        int size = sprintf(buffer, "HELLO %s", cli->pseudo);
 
-        sprintf(buffer, "HELLO %s", cli->pseudo);
-
-        send(fd,buffer,strlen(buffer),0);
+        send(fd,buffer,size,0);
         //todo: verifier diff -1
-        memset(buffer,0,100);
+        memset(buffer,0,BUFF_SIZE);
     } else {
         printf(":((");
     }
@@ -126,17 +128,26 @@ void * maxint(void *arg) {
     int run = 1;
 
     while (run) {
-        memset(buffer,0,100);
-        recu = recv(fd, buffer, 99*sizeof(char),0);
+        memset(buffer,0,BUFF_SIZE);
+        recu = recv(fd, buffer, (BUFF_SIZE-1)*sizeof(char),0);
         if (recu==0) {
             run=0;
-        }
-        char * tmp = malloc(100);
+        } else {
+
+
+
         memmove(tmp,buffer,3);
+        if (recu>0) {
+
+                tmp[recu]='\0';
+                printf("%s",tmp);
+                }
         uint16_t nb;
-        printf("%s",buffer);
+
         if (strcmp(tmp, "INT")==0) {
+            //printf("dog\n");
             pthread_mutex_lock(&lock);
+            reception=1;
             memmove (&nb, buffer+3, 2);
             //todo: voir si marche ntohs
             nb = ntohs(nb);
@@ -150,43 +161,49 @@ void * maxint(void *arg) {
                 perror("send");
                 exit(1);
             }
-            memset(tmp,0,100);
-            memset(buffer,0,100);
+
+            if (nb_sent>0) {
+                        memset(tmp,0,BUFF_SIZE);
+                        memset(buffer,0,BUFF_SIZE);
+
+            } else {
+                printf(":o\n");
+            }
+            //printf("nb send:%d\n",nb_sent);
             pthread_mutex_unlock(&lock);
         }
 
-        if (strcmp("MAX",buffer)==0) {
+        else if (strcmp("MAX",buffer)==0) {
             pthread_mutex_lock(&lock);
             /*
             envoie au client la valeur maximale de
             l’entier parmi les entiers reçus.
             */
             if (reception) {
-                char * mess = malloc(512);
+                memset(buffer,0,BUFF_SIZE);
                 char * rep = "REP";
                 //TODO: pb: faire un compteur mais quel type ? on a du 32 et du 16 bits
                 int ctr=0;
 
-                memmove(mess,rep,strlen(rep));
+                memmove(buffer,rep,strlen(rep));
                 ctr += strlen(rep);
                 // todo: ajouter caractère final a pseudo_max ???
-                memmove(mess+ctr,cli_max.pseudo,MAX_NAME);
+                memmove(buffer+ctr,cli_max.pseudo,MAX_NAME);
                 ctr += MAX_NAME;
                 uint32_t ip = cli_max.addr->sin_addr.s_addr;
                 ip = htonl(ip);
 
-                memmove(mess+strlen(rep)+MAX_NAME,&ip,sizeof(uint32_t));
+                memmove(buffer+strlen(rep)+MAX_NAME,&ip,sizeof(uint32_t));
                 ctr += sizeof(uint32_t);
                 uint16_t n = cli_max.nb;
                 n =htons(n);
-                memmove(mess+strlen(rep)+MAX_NAME+sizeof(uint32_t), &n, sizeof(uint16_t));
+                memmove(buffer+strlen(rep)+MAX_NAME+sizeof(uint32_t), &n, sizeof(uint16_t));
                 ctr += sizeof(uint16_t);
-                int nb_sent = send (fd, mess, 512,0);
+                int nb_sent = send (fd, buffer, BUFF_SIZE,0);
                 if (nb_sent==-1) {
                     perror("send");
                     exit(1);
                 }
-                free(mess);
                 reception=1;
             } else {
                 int nb_sent = send (fd, "NOP", 3,0);
@@ -201,14 +218,17 @@ void * maxint(void *arg) {
                     {
 
                         sprintf(buffer, "UNKNOWN COMMAND: %s", buffer);
-                        send(fd, buffer, strlen(buffer),0);
-                        memset(buffer,0,100);
+                        //send(fd, buffer, strlen(buffer),0);
+                        memset(buffer,0,BUFF_SIZE);
                         run = 0;
                     }
+                    }
     }
-    free(buffer);
+    free(tmp);
     // déconnexion du client
     close(fd);
+    free(cli->pseudo);
+    free(buffer);
     free(cli);
     return NULL;
 }

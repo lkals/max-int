@@ -45,54 +45,67 @@ int main(int argc, char *argv[]) {
         perror("connect");
         exit(1);
     }
+    char *pseudo = (char *) malloc(MAX_NAME+1);
     if (r==0) {
-        char pseudo[MAX_NAME];
-        sprintf(pseudo,"client2");
-        int nb_sent = send(fd, pseudo, MAX_NAME,0);
+
+        int size = sprintf(pseudo,"client2");
+        int nb_sent = send(fd, pseudo, size,0);
         if (nb_sent==-1) {
             perror("send");
             exit(1);
         }
         // Il attend ensuite la réponse du serveur de la forme « HELLO␣<pseudo> »
-        char * rep = (char *) malloc(100);
-        int recu = recv(fd, rep, 99,0);
+        char * buffer = (char *) malloc(256);
+        int recu = recv(fd, buffer, 255,0);
+
         if (recu == -1) {
             perror("recv");
             exit(1);
         }
         if (recu == 0) {
             //todo: idk
-            sleep(100);
+            sleep(1000);
         }
         if (recu > 0) {
+            // verifie qu'on a reçu la réponse de format « HELLO␣<pseudo> »
+            printf("%s\n",buffer);
+            char model[20];
+            int size = sprintf(model, "HELLO %s",pseudo);
+            if (size == recu) {
+                if (strcmp(model,buffer)==0) {
+
+
+
             char * max = "MAX";
             int nb_sent = send (fd, max,strlen(max),0);
             if (nb_sent == -1) {
                 perror("send");
                 exit(1);
             }
-            char * buff = malloc(512);
+            memset(buffer,0,256);
             int curr_size=0;
-            int recu = recv(fd, buff, 512,0);
+            int recu = recv(fd, buffer, 255,0);
             if (recu == 0) {
                 //todo: idk
-                sleep(100);
+                sleep(1000);
             }
-            char * pseudo = malloc(10);
+            buffer[recu]='\0';
+            printf("%s\n",buffer);
+            char * pseudo_max = (char *)malloc(MAX_NAME+1);
             curr_size += 3;
-            memmove(pseudo,buff+curr_size, MAX_NAME);
+            memmove(pseudo_max,buffer+curr_size, MAX_NAME);
             curr_size+= MAX_NAME;
 
             uint32_t ip;
-            memmove(&ip,buff+curr_size,sizeof(uint32_t));
+            memmove(&ip,buffer+curr_size,sizeof(uint32_t));
             curr_size += sizeof(uint32_t);
 
             ip = ntohl(ip);
             uint16_t nb;
-            memmove(&nb, buff+curr_size,sizeof(uint16_t));
+            memmove(&nb, buffer+curr_size,sizeof(uint16_t));
             nb = ntohs(nb);
             // écriture dans sortie standard
-            int nb_written = write (1,pseudo,MAX_NAME);
+            int nb_written = write (1,pseudo_max,MAX_NAME);
             if (nb_written==-1) {
                 perror("write");
                 exit(1);
@@ -107,11 +120,18 @@ int main(int argc, char *argv[]) {
                 perror("write");
                 exit(1);
             }
-
-
+            free(pseudo_max);
+              } else {
+                printf("è.é\n");
+              }
+            } else {
+                printf("fuck\n");
+            }
 
         }
+                    free(buffer);
     }
+    free(pseudo);
 
 
 }
