@@ -28,29 +28,23 @@ int main(int argc, char *argv[]) {
                exit(1);
            }
 
-    int fd = socket(PF_INET, SOCK_STREAM,0);
+    int fd; //= socket(PF_INET, SOCK_STREAM,0);
     //printf("fd client : %d\n",fd);
-    if (fd==-1) {
-        perror("socket");
-        exit(1);
-    }
+
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
     address_sock.sin_port = htons(port);
     //todo: addresse !!!!
     inet_aton("127.0.0.1",&address_sock.sin_addr);
 
-    int r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
-    if (r==-1) {
-        perror("connect");
-        exit(1);
-    }
-    if (r==0) {
+    int r; //= connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
+
+    //if (r==0) {
         srand(time(NULL));
         int i = 0;
-        char * pseudo = (char *) malloc(MAX_NAME+1);
-        char * buffer = (char *) malloc(BUFF_SIZE*sizeof(char));
-        char * tmp =(char *) malloc(BUFF_SIZE*sizeof(char));
+        char * pseudo = calloc(MAX_NAME+1,sizeof(char));
+        char * buffer = calloc(BUFF_SIZE,sizeof(char));
+        char * tmp = calloc(BUFF_SIZE,sizeof(char));
         int nb_sent;
         int recu;
         int size;
@@ -102,7 +96,7 @@ int main(int argc, char *argv[]) {
                         printf("%s\n",buffer);
                         char * debut = "INT";
                         memmove(tmp, debut, strlen(debut));
-                        uint16_t rd = rand() % 100;
+                        uint16_t rd = rand() % 1000;
                         rd = htons(rd);
                         memmove(tmp+strlen(debut),&rd,sizeof(uint16_t));
                         //todo: envoyer pile ce qu'il faut envoyer ou pas ?
@@ -154,7 +148,7 @@ int main(int argc, char *argv[]) {
         free(tmp);
         free(buffer);
         free(pseudo);
-    }
-    close(fd);
+   // }
+    //close(fd);
     return 0;
 }

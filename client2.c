@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
             }
             buffer[recu]='\0';
             printf("%s\n",buffer);
+            if (strcmp(buffer,"NOP")!=0) {
             curr_size += 3;
             memmove(pseudo_max,buffer+curr_size, MAX_NAME);
             curr_size+= MAX_NAME;
@@ -111,6 +112,8 @@ int main(int argc, char *argv[]) {
             memmove(&nb, buffer+curr_size,sizeof(uint16_t));
             nb = ntohs(nb);
             // écriture dans sortie standard
+            printf("ecriture:\n");
+            pseudo_max[MAX_NAME]='\0';
             int nb_written = write (1,pseudo_max,MAX_NAME);
             if (nb_written==-1) {
                 perror("write");
@@ -126,11 +129,9 @@ int main(int argc, char *argv[]) {
                 perror("write");
                 exit(1);
             }
-              } else {
-                printf("è.é\n");
-              }
         }
-
+        }
+    }
     }
     free(pseudo_max);
     free(buffer);
