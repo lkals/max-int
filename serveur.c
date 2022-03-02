@@ -30,18 +30,21 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 //cli_info cli_max;
 // booléen indiquant si on a reçu un entier ou pas
 int reception;
-
+//todo: tester avec des sleep (client1 et client2)
 // TODO: tester sur lulu et sur d'autres ordis
 // TODO: faire un goto error si temps
-// todo: define constante buffer
 //todo: utiliser les fonctions mem (memmove plutot que mempcpy) pour envoyer des suites d'octets (envoyer des int en big endian et non pas des string
 
 void * maxint(void *arg);
 
 int main(int argc, char *argv[]) {
     max_int* max = malloc(sizeof(max_int));
+    if (max==NULL) {
+        perror("malloc");
+        exit(1);
+    }
     max->ip=NULL;
-    max->pseudo=NULL;
+    max->pseudo=malloc(MAX_NAME+1);
     max->nb=NULL;
     cli_info *cli;
     int port;
@@ -72,6 +75,7 @@ int main(int argc, char *argv[]) {
         perror("bind");
         exit(1);
     }
+    pthread_t th;
     if (r==0) {
         r = listen(sockfd,0);
         //if (r==0) {
@@ -80,6 +84,10 @@ int main(int argc, char *argv[]) {
                 socklen_t size = sizeof(caller);
                 int * sockcli = (int *)malloc(sizeof(int));
                 cli = malloc (sizeof(cli_info));
+                if (cli==NULL) {
+                        perror("malloc");
+                        exit(1);
+                    }
                 *sockcli = accept(sockfd, (struct sockaddr *)&caller, &size);
                 cli->max_item = max;
                 cli->fd = *sockcli;
@@ -87,11 +95,12 @@ int main(int argc, char *argv[]) {
 
                 if (*sockcli>=0) {
                     //printf("coco\n");
-                    pthread_t th;
                     pthread_create (&th, NULL, maxint,cli);
                     //printf("decoco\n");
                 }
             }
+            //free(max);
+            return 0;
        // }
         // todo: faire les free et close nécessaires
     } else {
@@ -99,7 +108,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     //todo:faire les free nécessaires
-    return 0;
+
 }
 
 void * maxint(void *arg) {
@@ -107,26 +116,25 @@ void * maxint(void *arg) {
     cli_info * cli = (cli_info *)arg;
     //printf("hey\n");
     if (cli->max_item->pseudo==NULL) {
-        printf("ooooooh c null\n");
+       printf("NULL.--------------------------\n");
+
     }
-    if (cli->max_item->pseudo!=NULL && strcmp("",cli->max_item->pseudo)==0) {
+    if (reception !=0 && cli->max_item->pseudo!=NULL && strcmp("",cli->max_item->pseudo)==0) {
         printf("chaine vide.--------------------------\n");
         close(cli->fd);
         free(cli);
         return NULL;
     }
-    printf("\nDEBUT:cli->max_item->pseudo:%s\n",cli->max_item->pseudo);
+    printf("\nDEBUT:cli->max_item->pseudo:%s|\n",cli->max_item->pseudo);
     printf("DEBUT:cli->max_item->nb:%d\n",cli->max_item->nb);
-    char * pseudo = calloc (MAX_NAME+1,sizeof(char));
-    //char pseudo[MAX_NAME+1];
+    char * name = calloc (MAX_NAME+1,sizeof(char));
     char * buffer = calloc(BUFF_SIZE,sizeof(char));
-    char * tmp = malloc(BUFF_SIZE*sizeof(char));
-    //cli->pseudo =malloc (MAX_NAME+1);
+    char * tmp = calloc(BUFF_SIZE,sizeof(char));
 
     int fd = (cli->fd);
 
     // on attend le message du client <pseudo>
-    int recu = recv(fd, pseudo, MAX_NAME,0);
+    int recu = recv(cli->fd, name, MAX_NAME,0);
     if (recu==-1) {
         perror("recv");
         exit(1);
@@ -137,19 +145,19 @@ void * maxint(void *arg) {
         return NULL;
     }
     //todo: attention au charactère final
-        pseudo[recu]='\0';
-        printf("%s\n",pseudo);
-        int size = sprintf(buffer, "HELLO %s", pseudo);
+    name[recu]='\0';
+    printf("%s\n",name);
+    int size = sprintf(buffer, "HELLO %s", name);
 
         send(fd,buffer,size,0);
         //todo: verifier diff -1
-        memset(buffer,0,BUFF_SIZE);
+        //memset(buffer,0,BUFF_SIZE);
 
     int run = 1;
     while (run) {
 
         memset(buffer,0,BUFF_SIZE);
-        recu = recv(fd, buffer, (BUFF_SIZE-1)*sizeof(char),0);
+        recu = recv(fd, buffer, (BUFF_SIZE-1),0);
         if (recu==0) {
             run=0;
         } else {
@@ -164,36 +172,37 @@ void * maxint(void *arg) {
 
         if (strcmp(tmp, "INT")==0) {
             //printf("dog\n");
+            char * rep = "INTOK";
+                        int nb_sent = send(fd, rep,strlen(rep),0);
+                        if (nb_sent==-1) {
+                            perror("send");
+                            exit(1);
+                        }
             pthread_mutex_lock(&lock);
             reception=1;
             memmove (&nb, buffer+3, 2);
             //todo: voir si marche ntohs
             nb = ntohs(nb);
             printf("%d\n",nb);
-            if (nb > cli->max_item->nb) {
-                //printf("cli->pseudo:%s\n",cli->pseudo);
+            if (nb >= cli->max_item->nb) {
+                printf("nb:%d > max_nb:%d\n",nb,cli->max_item->nb);
                 cli->max_item->nb = nb;
                 cli->max_item->ip = cli->addr->sin_addr.s_addr;
-                cli->max_item->pseudo = pseudo;
+                strcpy(cli->max_item->pseudo,name);
+                //cli->max_item->pseudo = name;
                 printf("APRES UPDATE:cli->max_item->pseudo:%s\n",cli->max_item->pseudo);
 
             }
-            char * rep = "INTOK";
-            int nb_sent = send(fd, rep,strlen(rep)+1,0);
-            if (nb_sent==-1) {
-                perror("send");
-                exit(1);
-            }
-
-            if (nb_sent>0) {
+            pthread_mutex_unlock(&lock);
+            /*if (nb_sent>0) {
                 memset(tmp,0,BUFF_SIZE);
                 memset(buffer,0,BUFF_SIZE);
 
             } else {
                 printf(":o\n");
-            }
+            }*/
             //printf("nb send:%d\n",nb_sent);
-            pthread_mutex_unlock(&lock);
+
         }
 
         else if (strcmp("MAX",buffer)==0) {
@@ -256,10 +265,10 @@ void * maxint(void *arg) {
     free(tmp);
     // déconnexion du client
     close(cli->fd);
-    printf("juste avant free:%s\n",cli->max_item->pseudo);
-    //free(pseudo);
-    printf("apres free:%s\n",cli->max_item->pseudo);
+    //printf("juste avant free:%s\n",cli->max_item->pseudo);
     free(buffer);
+    free(name);
+    //printf("apres free:%s\n",cli->max_item->pseudo);
     free(cli);
     printf("fin:%s\n",cli->max_item->pseudo);
     return NULL;

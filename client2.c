@@ -16,7 +16,8 @@
 
 int main(int argc, char *argv[]) {
 
-   int port;
+   int port=4242;
+   char * co_ip="127.0.0.1";
         switch (argc)
            {
            case 1:
@@ -24,12 +25,19 @@ int main(int argc, char *argv[]) {
                break;
            case 2:
                port= atoi(argv[1]);
+               printf("home\n");
+               break;
+           case 3:
+               port = atoi(argv[1]);
+               if (strcmp(argv[2],"lulu")==0) {
+                co_ip="192.168.70.237";
+               }
                break;
            default:
-               printf("Usage : ./serveur [port].\nPort par défaut : 4242.\n");
+               printf("Usage : ./serveur [port].\nPort par défaut : 4242., ip par défaut : home\n");
                exit(1);
            }
-
+    printf("ip de co =%s\n",co_ip);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd==-1) {
         perror("socket");
@@ -40,8 +48,7 @@ int main(int argc, char *argv[]) {
 
     address_sock.sin_port = htons(port);
     // todo: addresse : lulu ou host ?
-    //inet_aton("192.168.70.237",&address_sock.sin_addr);
-     inet_aton("127.0.0.1",&address_sock.sin_addr);
+    inet_aton(co_ip,&address_sock.sin_addr);
 
     int r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
     if (r==-1) {
