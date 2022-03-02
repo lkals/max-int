@@ -37,18 +37,14 @@ int main(int argc, char *argv[]) {
               }
         printf("ip de co =%s\n",co_ip);
 
-    int fd; //= socket(PF_INET, SOCK_STREAM,0);
-    //printf("fd client : %d\n",fd);
-
+    int fd;
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
     address_sock.sin_port = htons(port);
     //todo: addresse !!!!
-   // inet_aton("192.168.70.237",&address_sock.sin_addr);
     inet_aton(co_ip,&address_sock.sin_addr);
 
-    int r; //= connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
-
+    int r;
     //if (r==0) {
         srand(time(NULL));
         int i = 0;
@@ -73,14 +69,12 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
 
-            //printf("i:%d\n",i);
             size = sprintf(pseudo, "pseudo%d",i+1);
             if (size > MAX_NAME) {
                 perror("pseudo size incorrect");
                 exit(1);
             }
             nb_sent = send(fd, pseudo, size, 0);
-            //printf("send %s",pseudo);
             if (nb_sent == -1) {
                 perror("send");
                 exit(1);
@@ -115,16 +109,13 @@ int main(int argc, char *argv[]) {
                         memmove(tmp+strlen(debut),&rd,sizeof(uint16_t));
                         //todo: envoyer pile ce qu'il faut envoyer ou pas ?
                         nb_sent = send (fd, tmp, strlen(debut)+sizeof(uint16_t),0);
-                        //printf("%s\n",mess);
                         if (nb_sent==-1) {
                             perror("send");
                             exit(1);
                         }
-                        //memset(tmp,0,BUFF_SIZE);
 
                         // suite du protocole : on doit recevoir INTOK
-                        //memset(buffer,0,BUFF_SIZE);
-                        //if (nb_sent>0) {
+
                         memset(buffer,0,BUFF_SIZE);
                                     recu = recv(fd, buffer,(BUFF_SIZE-1),0);
                                     if (recu==-1) {
@@ -138,32 +129,20 @@ int main(int argc, char *argv[]) {
                                     }
 
                                     if (recu > 0) {
-                                        //printf("recu:%d\n",recu);
                                         buffer[recu]='\0';
                                         printf("%s\n",buffer);
                                     }
-                                    /*memset(tmp,0,BUFF_SIZE);
-                                    memset(buffer,0,BUFF_SIZE);
-                                    memset(pseudo,0,MAX_NAME+1);*/
-                                    //i++;
-                                    //close(fd);
 
-                   // }
-                    } /*else {
-                        sleep(1000);
-                    }*/
-                //}
+                    }
                 //sleep(5);
                 i++;
                 close(fd);
                 //sleep(5);
-            //}
 
         }
         free(tmp);
         free(buffer);
         free(pseudo);
-   // }
-    //close(fd);
+
     return 0;
 }

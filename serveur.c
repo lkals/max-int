@@ -26,14 +26,11 @@ typedef struct {
 
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-// todo: ça devrait ê un pointeur ?
-//cli_info cli_max;
 // booléen indiquant si on a reçu un entier ou pas
-int reception;
+int reception=0;
 //todo: tester avec des sleep (client1 et client2)
 // TODO: tester sur lulu et sur d'autres ordis
 // TODO: faire un goto error si temps
-//todo: utiliser les fonctions mem (memmove plutot que mempcpy) pour envoyer des suites d'octets (envoyer des int en big endian et non pas des string
 
 void * maxint(void *arg);
 
@@ -94,12 +91,11 @@ int main(int argc, char *argv[]) {
                 cli->addr = &caller;
 
                 if (*sockcli>=0) {
-                    //printf("coco\n");
                     pthread_create (&th, NULL, maxint,cli);
-                    //printf("decoco\n");
                 }
             }
-            //free(max);
+            free(max->pseudo);
+            free(max);
             return 0;
        // }
         // todo: faire les free et close nécessaires
@@ -114,7 +110,6 @@ int main(int argc, char *argv[]) {
 void * maxint(void *arg) {
 
     cli_info * cli = (cli_info *)arg;
-    //printf("hey\n");
     if (cli->max_item->pseudo==NULL) {
        printf("NULL.--------------------------\n");
 
@@ -189,20 +184,10 @@ void * maxint(void *arg) {
                 cli->max_item->nb = nb;
                 cli->max_item->ip = cli->addr->sin_addr.s_addr;
                 strcpy(cli->max_item->pseudo,name);
-                //cli->max_item->pseudo = name;
                 printf("APRES UPDATE:cli->max_item->pseudo:%s\n",cli->max_item->pseudo);
 
             }
             pthread_mutex_unlock(&lock);
-            /*if (nb_sent>0) {
-                memset(tmp,0,BUFF_SIZE);
-                memset(buffer,0,BUFF_SIZE);
-
-            } else {
-                printf(":o\n");
-            }*/
-            //printf("nb send:%d\n",nb_sent);
-
         }
 
         else if (strcmp("MAX",buffer)==0) {
@@ -212,8 +197,6 @@ void * maxint(void *arg) {
             envoie au client la valeur maximale de
             l’entier parmi les entiers reçus.
             */
-            //printf("cli_max.pseudo:%s\n",cli_max.pseudo);
-            //printf("cli_max.nb:%d\n",cli_max.nb);
             //todo: changer condition reception (check si nb de max_item est NULL)
             if (reception) {
 
@@ -265,10 +248,8 @@ void * maxint(void *arg) {
     free(tmp);
     // déconnexion du client
     close(cli->fd);
-    //printf("juste avant free:%s\n",cli->max_item->pseudo);
     free(buffer);
     free(name);
-    //printf("apres free:%s\n",cli->max_item->pseudo);
     free(cli);
     printf("fin:%s\n",cli->max_item->pseudo);
     return NULL;

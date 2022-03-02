@@ -129,23 +129,7 @@ int main(int argc, char *argv[]) {
             char * ipv4 = inet_ntoa(addr);
             printf("ip:%s\n",ipv4);
             printf("nb:%d\n",nb);
-            /*int nb_written = write (1,pseudo_max,MAX_NAME);
-            if (nb_written==-1) {
-                perror("write");
-                exit(1);
-            }
-            printf("\nip:\n");
-            nb_written = write(1, &ip, sizeof(uint32_t));
-            if (nb_written==-1) {
-                perror("write");
-                exit(1);
-            }
-            printf("\nnb:\n");
-            nb_written = write(1, &nb, sizeof(uint16_t));
-            if (nb_written==-1) {
-                perror("write");
-                exit(1);
-            }*/
+
         } else {
             buffer[recu]='\0';
             printf("%s\n",buffer);
