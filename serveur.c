@@ -28,9 +28,11 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 // booléen indiquant si on a reçu un entier ou pas
 int reception=0;
-//todo: tester avec des sleep (client1 et client2)
+// todo: tester avec des sleep (client1 et client2)
 // TODO: tester sur lulu et sur d'autres ordis
 // TODO: faire un goto error si temps
+//todo: tester si apres free(cli) on accede tjr a pseudo sur lulu -> mieux gérer malloc ? (en vrai fonctionnel donc bon)
+
 
 void * maxint(void *arg);
 
@@ -93,13 +95,17 @@ int main(int argc, char *argv[]) {
                 if (*sockcli>=0) {
                     pthread_create (&th, NULL, maxint,cli);
                 }
+                free(sockcli);
             }
             free(max->pseudo);
             free(max);
             return 0;
        // }
+       // todo: free sockcli
         // todo: faire les free et close nécessaires
     } else {
+        free(max->pseudo);
+        free(max);
         perror("Can't start server");
         return 1;
     }
@@ -250,6 +256,7 @@ void * maxint(void *arg) {
     close(cli->fd);
     free(buffer);
     free(name);
+    printf("avant free(cli):%s\n",cli->max_item->pseudo);
     free(cli);
     printf("fin:%s\n",cli->max_item->pseudo);
     return NULL;

@@ -25,32 +25,39 @@ int main(int argc, char *argv[]) {
                break;
            case 2:
                port= atoi(argv[1]);
-               printf("home\n");
                break;
            case 3:
                port = atoi(argv[1]);
                if (strcmp(argv[2],"lulu")==0) {
-                co_ip="192.168.70.237";
+                co_ip="192.168.70.236";
+               } else {
+                printf("argv[2]:%s",argv[2]);
+                co_ip=argv[2];
                }
                break;
            default:
-               printf("Usage : ./serveur [port].\nPort par défaut : 4242., ip par défaut : home\n");
+               printf("Usage : ./serveur [port] [ipv4].\nPort par défaut : 4242., ip par défaut : 127.0.0.1\nExécuter ./serveur [port] lulu \n Pour vous connecter à lulu\n");
                exit(1);
            }
     printf("ip de co =%s\n",co_ip);
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    int fd = socket(PF_INET, SOCK_STREAM, 0);
     if (fd==-1) {
         perror("socket");
         exit(1);
     }
+
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
-
     address_sock.sin_port = htons(port);
     // todo: addresse : lulu ou host ?
-    inet_aton(co_ip,&address_sock.sin_addr);
+    int r = inet_aton(co_ip,&address_sock.sin_addr);
+    if (r==0) {
+        fprintf( stderr, "ERR:adresse ip non valide\n");
+        perror("inet_aton");
+        exit(1);
+    }
 
-    int r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
+    r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
     if (r==-1) {
         perror("connect");
         exit(1);

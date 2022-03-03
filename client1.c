@@ -16,6 +16,8 @@ int main(int argc, char *argv[]) {
 
    int port=4242;
    char * co_ip="127.0.0.1";
+   //TODO: ajouter option nptq ip ????
+   //todo: faire en sorte que les pseudos soient uniques
            switch (argc)
               {
               case 1:
@@ -23,28 +25,34 @@ int main(int argc, char *argv[]) {
                   break;
               case 2:
                   port= atoi(argv[1]);
-
                   break;
               case 3:
-
+                  port= atoi(argv[1]);
                   if (strcmp(argv[2],"lulu")==0) {
-                   co_ip="192.168.70.237";
+                    co_ip="192.168.70.236";
+                  } else {
+                    co_ip=argv[2];
                   }
                   break;
               default:
-                  printf("Usage : ./serveur [port].\nPort par défaut : 4242., ip par défaut : home\n");
+                  printf("Usage : ./serveur [port] [ipv4].\nPort par défaut : 4242., ip par défaut : 127.0.0.1\nExécuter ./serveur [port] lulu \n Pour vous connecter à lulu\n");
                   exit(1);
               }
+
         printf("ip de co =%s\n",co_ip);
 
     int fd;
+    int r;
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
     address_sock.sin_port = htons(port);
-    //todo: addresse !!!!
-    inet_aton(co_ip,&address_sock.sin_addr);
+    r = inet_aton(co_ip,&address_sock.sin_addr);
+    if (r==0) {
+        fprintf( stderr, "ERR:adresse ip non valide\n");
+        perror("inet_aton");
+        exit(1);
+    }
 
-    int r;
     //if (r==0) {
         srand(time(NULL));
         int i = 0;
@@ -63,6 +71,10 @@ int main(int argc, char *argv[]) {
                 perror("socket");
                 exit(1);
             }
+            /*struct sockaddr_in address_sock;
+                address_sock.sin_family = AF_INET;
+                address_sock.sin_port = htons(port);
+                inet_aton(co_ip,&address_sock.sin_addr);*/
             r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
             if (r==-1) {
                 perror("connect");
@@ -113,7 +125,7 @@ int main(int argc, char *argv[]) {
                             perror("send");
                             exit(1);
                         }
-
+                        //todo:ajouter un sleep
                         // suite du protocole : on doit recevoir INTOK
 
                         memset(buffer,0,BUFF_SIZE);
@@ -124,13 +136,14 @@ int main(int argc, char *argv[]) {
                                         exit(1);
                                     }
                                     if (recu == 0) {
-                                     printf("wait...\n");
-                                        sleep(1000);
+                                        printf("wait...\n");
+                                        sleep(10);
                                     }
 
                                     if (recu > 0) {
                                         buffer[recu]='\0';
                                         printf("%s\n",buffer);
+                                        sleep(3);
                                     }
 
                     }
