@@ -72,7 +72,6 @@ int main(int argc, char *argv[]) {
     pthread_t th;
     if (r==0) {
         r = listen(sockfd,0);
-        //if (r==0) {
             while (1) {
                 struct sockaddr_in caller;
                 socklen_t size = sizeof(caller);

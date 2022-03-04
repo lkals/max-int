@@ -20,6 +20,6 @@ Pour compiler le programme, un Makefile est fourni. Il suffit d'effectuer la com
 Pour exécuter le serveur, effectuer la commande dans un terminal ``./serveur [port]``.
 Pour exécuter les clients, la commande ``./client1 [port] [ip]`` et/ou ``./client2 [port] [ip]``, chacune dans un autre terminal.
 
-Vous pouvez préciser une adresse ipv4 en argument après le port, et par défaut cette adresse est 127.0.0.1.
+Vous pouvez préciser une adresse IPv4 en argument après le port, et par défaut cette adresse est 127.0.0.1.
 Pour plus de facilité, vous pouvez simplement entrer la commande ```./client1 [port] lulu```
 pour faire tourner le client sur lulu. 
