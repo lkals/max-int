@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
 
     int fd;
     int r;
+    int err=0;
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
     address_sock.sin_port = htons(port);
@@ -67,13 +68,15 @@ int main(int argc, char *argv[]) {
         fd = socket(PF_INET, SOCK_STREAM,0);
         if (fd==-1) {
             perror("socket");
-            exit(1);
+            err=1;
+            break;
         }
 
         r = connect(fd, (struct sockaddr *) &address_sock, sizeof(struct sockaddr_in));
         if (r==-1) {
             perror("connect");
-            exit(1);
+            err=1;
+            break;
         }
 
         size = sprintf(pseudo, "pseudo%d",i+1);
@@ -84,7 +87,8 @@ int main(int argc, char *argv[]) {
         nb_sent = send(fd, pseudo, size, 0);
         if (nb_sent == -1) {
             perror("send");
-            exit(1);
+            err=1;
+            break;
         }
 
         // Il attend ensuite la réponse du serveur de la forme « HELLO␣<pseudo> »
@@ -95,7 +99,8 @@ int main(int argc, char *argv[]) {
         if (recu == -1) {
             fprintf( stderr, "ERR:hello pseudo err \n");
             perror("recv");
-            exit(1);
+            err=1;
+            break;
         }
 
         char model[50];
@@ -111,7 +116,8 @@ int main(int argc, char *argv[]) {
             nb_sent = send (fd, tmp, strlen(debut)+sizeof(uint16_t),0);
             if (nb_sent==-1) {
                 perror("send");
-                exit(1);
+                err=1;
+                break;
             }
             // suite du protocole : on doit recevoir INTOK
 
@@ -120,7 +126,8 @@ int main(int argc, char *argv[]) {
             if (recu==-1) {
                 fprintf( stderr, "ERR:recv intok erreur \n");
                 perror("recv");
-                exit(1);
+                err=1;
+                break;
             }
             if (recu == 0) {
                 sleep(5);
@@ -137,5 +144,9 @@ int main(int argc, char *argv[]) {
     free(tmp);
     free(buffer);
     free(pseudo);
+    if (err) {
+        close(fd);
+        return 1;
+    }
     return 0;
 }

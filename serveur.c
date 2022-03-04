@@ -37,7 +37,6 @@ int main(int argc, char *argv[]) {
         perror("malloc");
         exit(1);
     }
-    max->ip=0;
     max->pseudo=malloc(MAX_NAME+1);
     max->nb=0;
     cli_info *cli;
@@ -145,7 +144,7 @@ void * maxint(void *arg) {
         recu = recv(fd, buffer, (BUFF_SIZE-1),0);
         if (recu==-1) {
             perror("recv");
-            exit(1);
+            run=0;
         }
         if (recu==0) {
             run=0;
@@ -164,7 +163,7 @@ void * maxint(void *arg) {
             int nb_sent = send(fd, rep,strlen(rep),0);
             if (nb_sent==-1) {
                 perror("send");
-                exit(1);
+                run=0;
             }
             pthread_mutex_lock(&lock);
             reception=1;
@@ -210,26 +209,25 @@ void * maxint(void *arg) {
                 int nb_sent = send (fd, buffer, buff_size_ctr,0);
                 if (nb_sent==-1) {
                     perror("send");
-                    exit(1);
+                    run=0;
                 }
                 reception=1;
             } else {
                 int nb_sent = send (fd, "NOP", 3,0);
                 if (nb_sent==-1) {
                     perror("send");
-                    exit(1);
+                    run=0;
                 }
             }
             pthread_mutex_unlock(&lock);
         } else {
-            memset(buffer, 0, BUFF_SIZE);
-            sprintf(buffer, "UNKNOWN COMMAND");
-            send(fd, buffer, strlen(buffer),0);
+
             run = 0;
         }
         }
     }
     free(tmp);
+    printf("Connexion fermée\n");
     // déconnexion du client
     close(cli->fd);
     free(buffer);

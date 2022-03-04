@@ -61,7 +61,6 @@ int main(int argc, char *argv[]) {
     char * pseudo = calloc(MAX_NAME+1,sizeof(char));
     char * buffer = calloc(BUFF_SIZE,sizeof(char));
     char * pseudo_max = calloc(MAX_NAME+1,sizeof(char));
-
     int nb_sent;
     int recu;
     int size;
@@ -71,6 +70,10 @@ int main(int argc, char *argv[]) {
         nb_sent = send(fd, pseudo, size,0);
         if (nb_sent==-1) {
             perror("send");
+            close(fd);
+            free(pseudo_max);
+            free(buffer);
+            free(pseudo);
             exit(1);
         }
         // Il attend ensuite la réponse du serveur de la forme « HELLO␣<pseudo> »
@@ -78,6 +81,10 @@ int main(int argc, char *argv[]) {
 
         if (recu == -1) {
             perror("recv");
+            close(fd);
+            free(pseudo_max);
+            free(buffer);
+            free(pseudo);
             exit(1);
         }
         if (recu == 0) {
@@ -96,6 +103,10 @@ int main(int argc, char *argv[]) {
             nb_sent = send (fd, max,strlen(max),0);
             if (nb_sent == -1) {
                 perror("send");
+                close(fd);
+                free(pseudo_max);
+                free(buffer);
+                free(pseudo);
                 exit(1);
             }
             memset(buffer,0,BUFF_SIZE);
@@ -136,9 +147,10 @@ int main(int argc, char *argv[]) {
         }
     }
     }
+    close(fd);
     free(pseudo_max);
     free(buffer);
     free(pseudo);
-    close(fd);
+
     return 0;
 }
