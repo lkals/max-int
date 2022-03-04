@@ -11,8 +11,6 @@
 #define MAX_NAME 10
 #define BUFF_SIZE 256
 
-//todo: faire un fichier utils avec fonction attente reponse serveur par exemple ??
-
 
 int main(int argc, char *argv[]) {
 
@@ -31,7 +29,6 @@ int main(int argc, char *argv[]) {
                if (strcmp(argv[2],"lulu")==0) {
                 co_ip="192.168.70.236";
                } else {
-                printf("argv[2]:%s",argv[2]);
                 co_ip=argv[2];
                }
                break;
@@ -49,7 +46,6 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in address_sock;
     address_sock.sin_family = AF_INET;
     address_sock.sin_port = htons(port);
-    // todo: addresse : lulu ou host ?
     int r = inet_aton(co_ip,&address_sock.sin_addr);
     if (r==0) {
         fprintf( stderr, "ERR:adresse ip non valide\n");
@@ -65,7 +61,6 @@ int main(int argc, char *argv[]) {
     char * pseudo = calloc(MAX_NAME+1,sizeof(char));
     char * buffer = calloc(BUFF_SIZE,sizeof(char));
     char * pseudo_max = calloc(MAX_NAME+1,sizeof(char));
-
 
     int nb_sent;
     int recu;
@@ -86,13 +81,11 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         if (recu == 0) {
-            //todo: idk
-            sleep(1000);
+            sleep(5);
         }
         if (recu > 0) {
 
             // verifie qu'on a reçu la réponse de format « HELLO␣<pseudo> »
-
             char model[20];
             size = sprintf(model, "HELLO %s",pseudo);
             if (strcmp(model,buffer)==0) {
@@ -109,8 +102,7 @@ int main(int argc, char *argv[]) {
             int curr_size=0;
             recu = recv(fd, buffer, (BUFF_SIZE-1),0);
             if (recu == 0) {
-                //todo: idk
-                sleep(1000);
+                sleep(5);
             }
 
             if (strcmp(buffer,"NOP")!=0) {
