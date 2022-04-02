@@ -1,25 +1,13 @@
-# TP Noté 5 de Programmation réseaux
-
-### Nom - KALOUSDIAN
-### Prénom - Leah 
-### n°étudiante - 21960294
-
-## Fichiers présents
-
-- serveur.c
-- client1.c
-- client2.c
-- Makefile
+# Little game to guess a random integer
 
 ## Compilation
+ 
+``make``
 
-Pour compiler le programme, un Makefile est fourni. Il suffit d'effectuer la commande ``make``.
+## Execution
 
-## Exécution
+To execute the server, enter this command in a terminal : ``./serveur [port]``.
+To execute the clients, the command ``./client1 [port] [ip]`` and ``./client2 [port] [ip]`` 
+each in their own terminal.
 
-Pour exécuter le serveur, effectuer la commande dans un terminal ``./serveur [port]``.
-Pour exécuter les clients, la commande ``./client1 [port] [ip]`` et/ou ``./client2 [port] [ip]``, chacune dans un autre terminal.
-
-Vous pouvez préciser une adresse IPv4 en argument après le port, et par défaut cette adresse est 127.0.0.1.
-Pour plus de facilité, vous pouvez simplement entrer la commande ```./client1 [port] lulu```
-pour faire tourner le client sur lulu. 
+You can put a IPv4 address as a parameter in the shell ; the default parameter being 127.0.0.1

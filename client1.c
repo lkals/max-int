@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     address_sock.sin_port = htons(port);
     r = inet_aton(co_ip,&address_sock.sin_addr);
     if (r==0) {
-        fprintf( stderr, "ERR:adresse ip non valide\n");
+        fprintf( stderr, "ERR: IP address not valid\n");
         perror("inet_aton");
         exit(1);
     }
@@ -79,10 +79,11 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        size = sprintf(pseudo, "pseudo%d",i+1);
-        if (size > MAX_NAME) {
+        size = sprintf(pseudo, "detective%d",i+1);
+        if (size != MAX_NAME) {
             perror("pseudo size incorrect");
-            exit(1);
+            err=1;
+            break;
         }
         nb_sent = send(fd, pseudo, size, 0);
         if (nb_sent == -1) {
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]) {
             sleep(10);
         }
         if (recu == -1) {
-            fprintf( stderr, "ERR:hello pseudo err \n");
+            fprintf( stderr, "ERR: HELLO <pseudo>\n");
             perror("recv");
             err=1;
             break;
@@ -124,7 +125,7 @@ int main(int argc, char *argv[]) {
             memset(buffer,0,BUFF_SIZE);
             recu = recv(fd, buffer,(BUFF_SIZE-1),0);
             if (recu==-1) {
-                fprintf( stderr, "ERR:recv intok erreur \n");
+                fprintf( stderr, "ERR: recv INTOK\n");
                 perror("recv");
                 err=1;
                 break;

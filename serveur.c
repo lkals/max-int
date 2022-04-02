@@ -11,6 +11,9 @@
 #define MAX_NAME 10
 #define BUFF_SIZE 256
 
+//todo: code trop long dans les fonctions → utiliser des fonctions
+//todo: limiter les mutex aux portions de code critique
+
 typedef struct {
     uint16_t nb;
     uint32_t ip;
@@ -30,6 +33,8 @@ int reception=0;
 
 
 void * maxint(void *arg);
+void * handle_int_response(void *arg, pthread_mutex_t lock);
+void * handle_max_response(void *arg, pthread_mutex_t lock);
 
 int main(int argc, char *argv[]) {
     max_int* max = malloc(sizeof(max_int));
@@ -110,7 +115,7 @@ void * maxint(void *arg) {
        printf("NULL \n");
     }
     if (reception !=0 && cli->max_item->pseudo!=NULL && strcmp("",cli->max_item->pseudo)==0) {
-        printf("chaine vide.-------\n");
+        printf("err : empty\n");
         close(cli->fd);
         free(cli);
         return NULL;
@@ -128,7 +133,7 @@ void * maxint(void *arg) {
         exit(1);
     }
     if (recu==0) {
-        printf(" bye\n");
+        fprintf(stderr, "%s", "err: empty\n");
         close(fd);
         return NULL;
     }
@@ -227,7 +232,7 @@ void * maxint(void *arg) {
         }
     }
     free(tmp);
-    printf("Connexion fermée\n");
+    printf("Connexion closed\n");
     // déconnexion du client
     close(cli->fd);
     free(buffer);

@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
                printf("Usage : ./serveur [port] [ipv4].\nPort par défaut : 4242., ip par défaut : 127.0.0.1\nExécuter ./serveur [port] lulu \n Pour vous connecter à lulu\n");
                exit(1);
            }
-    printf("ip de co =%s\n",co_ip);
+    printf("IP address =%s\n",co_ip);
     int fd = socket(PF_INET, SOCK_STREAM, 0);
     if (fd==-1) {
         perror("socket");
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     address_sock.sin_port = htons(port);
     int r = inet_aton(co_ip,&address_sock.sin_addr);
     if (r==0) {
-        fprintf( stderr, "ERR:adresse ip non valide\n");
+        fprintf( stderr, "ERR: IP address not valid\n");
         perror("inet_aton");
         exit(1);
     }
